@@ -5,9 +5,9 @@
     "optional": [],
     "js": "index.js",
     "css": "style.css",
+    "html": "settings.html",
     "author": "You",
     "version": "1.0.0",
-    "homePage": "https://github.com/WOWWHATAWOW/quote-formatter",
-    "auto_update": true,
-    "html": "settings.html"
+    "homePage": "https://github.com/yourusername/quote-formatter",
+    "auto_update": true
 }
