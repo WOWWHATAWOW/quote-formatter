@@ -1,0 +1,8 @@
+/* Minimal styles for the Quote Formatter extension */
+#quote_formatter_settings .m-t-1 {
+    margin-top: 1em;
+}
+
+#quote_formatter_settings .flex {
+    display: flex;
+}
