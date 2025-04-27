@@ -5,11 +5,12 @@
  * but preserves them outside quotes
  */
 
-// Get necessary context from SillyTavern
-const { eventSource, event_types, extension_settings, saveSettingsDebounced, renderExtensionTemplateAsync } = SillyTavern.getContext();
+import { eventSource, event_types, extension_settings, saveSettingsDebounced } from "../../../../scripts/extensions.js";
+import { substituteParams } from "../../../../scripts/substitute.js";
+import { updateMessageBlock, saveChatConditional } from "../../../../script.js";
 
 // Define extension module name for settings
-const MODULE_NAME = 'quote_formatter';
+export const MODULE_NAME = 'quote_formatter';
 
 // Default settings
 const defaultSettings = {
@@ -39,7 +40,7 @@ function getSettings() {
 function removeAsterisksFromQuotes(text) {
     if (!text || typeof text !== 'string') return text;
     
-    // First pass: handle quoted text
+    // Replace asterisks inside quotes with nothing
     return text.replace(/"([^"]*)"/g, (match, content) => {
         // Remove all asterisks from content within quotes
         const cleanContent = content.replace(/\*/g, '');
@@ -56,6 +57,7 @@ function onMessageReceived(data) {
         // Process only if we have a message with text
         if (data && data.mes && typeof data.mes === 'string') {
             // Process message text and update it
+            const originalText = data.mes;
             data.mes = removeAsterisksFromQuotes(data.mes);
             
             // If there are swipes, process them too
@@ -66,37 +68,79 @@ function onMessageReceived(data) {
                     }
                 }
             }
+            
+            // If text was changed, update the message block
+            if (originalText !== data.mes && data.index !== undefined) {
+                updateMessageBlock(data.index, data, { transformMessage: true });
+                saveChatConditional();
+            }
         }
     } catch (error) {
         console.error(`[Quote Formatter] Error processing incoming message:`, error);
     }
 }
 
-function onMessageSent(data) {
+function onMessageSent(messageId) {
     try {
         const settings = getSettings();
         if (!settings.enabled || !settings.processOutgoing) return;
 
-        // Process the message being sent
+        // Get the chat context
         const context = SillyTavern.getContext();
-        const messageIndex = context.chat.length - 1;
-        const message = context.chat[messageIndex];
+        const message = context.chat[messageId];
 
         if (message && message.mes && typeof message.mes === 'string') {
+            const originalText = message.mes;
             message.mes = removeAsterisksFromQuotes(message.mes);
+            
+            // If text was changed, update the message block
+            if (originalText !== message.mes) {
+                updateMessageBlock(messageId, message, { transformMessage: true });
+                saveChatConditional();
+            }
         }
     } catch (error) {
         console.error(`[Quote Formatter] Error processing outgoing message:`, error);
     }
 }
 
-// Create settings UI
-async function createUI() {
+// Setup the UI settings
+function setupSettings() {
     const settings = getSettings();
     
-    // Append the HTML template
-    const html = await renderExtensionTemplateAsync(MODULE_NAME, 'settings');
-    $('#extensions_settings').append(html);
+    // Initialize checkboxes
+    $('#quote_formatter_enabled').prop('checked', settings.enabled);
+    $('#quote_formatter_incoming').prop('checked', settings.processIncoming);
+    $('#quote_formatter_outgoing').prop('checked', settings.processOutgoing);
+    
+    // Add event listeners
+    $('#quote_formatter_enabled').on('change', function() {
+        settings.enabled = $(this).prop('checked');
+        saveSettingsDebounced();
+    });
+    
+    $('#quote_formatter_incoming').on('change', function() {
+        settings.processIncoming = $(this).prop('checked');
+        saveSettingsDebounced();
+    });
+    
+    $('#quote_formatter_outgoing').on('change', function() {
+        settings.processOutgoing = $(this).prop('checked');
+        saveSettingsDebounced();
+    });
+}
+
+// Initialize extension
+jQuery(async () => {
+    // Setup event listeners
+    eventSource.on(event_types.MESSAGE_RECEIVED, onMessageReceived);
+    eventSource.on(event_types.MESSAGE_SENT, onMessageSent);
+    
+    // Setup settings UI
+    setupSettings();
+    
+    console.log(`[${MODULE_NAME}] Extension loaded`);
+});
     
     // Event listeners for settings
     $('#quote_formatter_enabled').on('change', function() {
