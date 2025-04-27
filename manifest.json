@@ -1,0 +1,13 @@
+{
+    "display_name": "Quote Formatter",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "You",
+    "version": "1.0.0",
+    "homePage": "https://github.com/WOWWHATAWOW/quote-formatter",
+    "auto_update": true,
+    "html": "settings.html"
+}
