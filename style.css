@@ -1,8 +1,8 @@
-/* Minimal styles for the Quote Formatter extension */
-#quote_formatter_settings .m-t-1 {
-    margin-top: 1em;
+/* Styles for the Quote Formatter extension */
+.quote_formatter_settings .checkbox_label {
+    margin-bottom: 8px;
 }
 
-#quote_formatter_settings .flex {
-    display: flex;
+.quote_formatter_settings .inline-drawer-content {
+    padding: 10px;
 }
